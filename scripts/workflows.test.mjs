@@ -25,7 +25,13 @@ const code = (source) =>
     .join("\n")
 
 test("the workflows are found", () => {
-  for (const name of ["ci.yml", "codeql.yml", "e2e.yml", "neon-branch.yml"]) {
+  for (const name of [
+    "ci.yml",
+    "codeql.yml",
+    "sbom.yml",
+    "e2e.yml",
+    "neon-branch.yml",
+  ]) {
     assert.ok(names.includes(name), name)
   }
 })
@@ -147,25 +153,44 @@ test("CodeQL leaves the reference snapshots and the playground out", () => {
   assert.deepEqual(renovate.ignorePaths, ["_context/**", "apps/poc/**"])
 })
 
-test("CI makes the bills of materials, and keeps those of main", () => {
-  const source = code(WORKFLOWS["ci.yml"])
-  const [, job] = source.match(
-    /\n {2}sbom:\n((?: {4}.*\n|\n)+?)(?=\n {2}[\w-]+:\n)/
+test("only the scan may write, and only what it finds", () => {
+  // Every permission to write, in any workflow, at any level.
+  const writes = Object.entries(WORKFLOWS).flatMap(([name, source]) =>
+    [...code(source).matchAll(/^\s*([\w-]+): write\s*$/gm)].map(
+      (match) => `${name}: ${match[1]}`
+    )
   )
-  assert.match(job, /timeout-minutes: \d+/)
+  assert.deepEqual(writes, ["codeql.yml: security-events"])
+  for (const [name, source] of Object.entries(WORKFLOWS)) {
+    assert.doesNotMatch(code(source), /write-all/, name)
+  }
+})
+
+test("the bills of materials are made on pull requests and on main, and those of main are kept", () => {
+  const source = code(WORKFLOWS["sbom.yml"])
+  assert.match(source, /\n {2}push:\n {4}branches: \[main\]/)
+  assert.match(source, /\n {2}pull_request:\n {4}branches: \[main\]/)
+  assert.match(source, /timeout-minutes: \d+/)
+  // A run of main is never cancelled by the next one: its files are the
+  // record of a commit that was deployed.
+  assert.match(
+    source,
+    /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/
+  )
   // Installed first, so that licences can be read.
   assert.ok(
-    job.indexOf("pnpm install --frozen-lockfile") <
-      job.indexOf("pnpm sbom:apps")
+    source.indexOf("pnpm install --frozen-lockfile") <
+      source.indexOf("pnpm sbom:apps")
   )
   assert.match(
-    job,
+    source,
     /if: github\.event_name == 'push'\n\s+uses: actions\/upload-artifact@/
   )
-  assert.match(job, /name: sbom-\$\{\{ github\.sha \}\}/)
-  assert.match(job, /if-no-files-found: error/)
-  assert.match(job, /retention-days: 90/)
-  assert.doesNotMatch(job, /permissions:|secrets\./)
+  assert.match(source, /name: sbom-\$\{\{ github\.sha \}\}/)
+  assert.match(source, /if-no-files-found: error/)
+  assert.match(source, /retention-days: 90/)
+  // It is given no secret, in a step or for the whole workflow.
+  assert.doesNotMatch(source, /secrets\./)
   const scripts = JSON.parse(
     readFileSync(path.join(ROOT, "package.json"), "utf8")
   ).scripts

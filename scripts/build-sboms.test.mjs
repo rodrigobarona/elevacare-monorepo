@@ -52,7 +52,7 @@ const component = (name, version = "1.0.0") => {
     type: "library",
     ...(group ? { group, name: short } : { name }),
     version,
-    purl: `pkg:npm/${name.replace("@", "%40")}@${version}`,
+    purl: `pkg:npm/${name.replaceAll("@", "%40")}@${version}`,
   }
 }
 
@@ -90,6 +90,8 @@ const DEMO = {
     dependencies: {
       "drizzle-orm": "1.0.0",
       neon: "npm:@neondatabase/serverless@1.0.0",
+      // An alias with no version after it.
+      pad: "npm:left-pad",
     },
     devDependencies: { "drizzle-kit": "1.0.0" },
   },
@@ -107,6 +109,7 @@ test("what an app depends on in production reaches through the workspace", () =>
     "@neondatabase/serverless",
     "@stripe/extra",
     "drizzle-orm",
+    "left-pad",
     "next",
     "stripe",
   ])
@@ -225,6 +228,7 @@ test("files are written as the tool wrote them, with a manifest that vouches for
           component("@stripe/extra"),
           component("drizzle-orm"),
           component("@neondatabase/serverless"),
+          component("left-pad"),
         ],
       }
     )
@@ -261,7 +265,7 @@ test("files are written as the tool wrote them, with a manifest that vouches for
       file: "web.cdx.json",
       sha256: 64,
       format: "CycloneDX 1.7",
-      components: 5,
+      components: 6,
       withLicence: 1,
     }
   )
@@ -275,7 +279,7 @@ test("a file that leaves a production dependency out fails, and is still written
     run: () => JSON.stringify(bomOf(["next"])),
   })
   assert.equal(problems.length, 1)
-  assert.match(problems[0], /^web: does not list 4 package\(s\)/)
+  assert.match(problems[0], /^web: does not list 5 package\(s\)/)
   assert.ok(readdirSync(out).includes("web.cdx.json"))
 
   assert.deepEqual(buildSboms(root, { out, run: () => "not json" }).problems, [

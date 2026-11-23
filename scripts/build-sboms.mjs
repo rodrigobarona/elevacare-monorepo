@@ -57,6 +57,8 @@ export const LIMITS = [
   "Does not list the Node.js runtime, the build image, hosted services, or the first-party @eleva/* packages (they are in the repository at the same commit).",
   "The root component of each file names the workspace, not the app: the file name and this manifest say which app.",
   "Licences are present only for packages that were installed when the file was made; supplier is not filled.",
+  "Each component's hash is the SHA-512 of its registry tarball, under externalReferences (type: distribution), not under the component's own hashes.",
+  "Checked here: the format and its version, a timestamp, the tool, a name, version and package URL for every component, and that every package the app names as a production dependency is listed. Not checked: the file against the CycloneDX schema, or packages reached only through other packages (that is trusted to pnpm).",
 ]
 
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"))
@@ -114,10 +116,14 @@ export function productionDependencies(root, name) {
     })) {
       if (packages.has(dependency) && String(range).startsWith("workspace:")) {
         visit(dependency)
-      } else if (/^(npm:|workspace:)/.test(String(range))) {
-        // An alias installs another package under this name.
-        const aliased = String(range).match(/^npm:(@?[^@]+)@/)
-        if (aliased) external.add(aliased[1])
+      } else if (String(range).startsWith("npm:")) {
+        // An alias installs another package under this name, with or
+        // without a version after it.
+        external.add(String(range).match(/^npm:(@?[^@]+)/)[1])
+      } else if (String(range).startsWith("workspace:")) {
+        throw new Error(
+          `${workspaceName} depends on ${dependency} as a workspace package, and there is none of that name`
+        )
       } else {
         external.add(dependency)
       }

@@ -53,9 +53,12 @@ Each entry should include:
     on disables this workflow, and it would scan the snapshots too.
 - **Bill of materials.** `pnpm sbom:apps` (`scripts/build-sboms.mjs`) writes
   one CycloneDX 1.7 file for each of the nine deployed apps, with a
-  manifest that names the commit and gives each file's SHA-256. CI runs it
-  on every pull request and on `main`, and keeps the files of `main` as an
-  artifact (`sbom-{commit}`) for 90 days.
+  manifest that names the commit and gives each file's SHA-256. A workflow
+  of its own (`.github/workflows/sbom.yml`) runs it on every pull request
+  and on `main`, and keeps the files of `main` as an artifact
+  (`sbom-{commit}`) for 90 days. It is not a job of CI, because CI cancels
+  a run of `main` that a newer one replaces, and the files of a commit that
+  was deployed would be lost.
   - Each file lists what the app depends on in production, its own
     packages and those it gets through the `@eleva/*` packages it uses
     (846 to 1,134 components an app), with name, version, package URL, the
@@ -71,7 +74,11 @@ Each entry should include:
   made in CI from the commit, not by the build that deploys. It does not
   list the Node.js runtime, the build image, hosted services or our own
   `@eleva/*` packages. The root component names the workspace, not the
-  app. Supplier is not filled. It meets the Cyber Resilience Act's wording
+  app. Supplier is not filled. A component's hash is of its registry
+  tarball, under `externalReferences`. The files are checked for the fields
+  named above, not against the CycloneDX schema, and packages reached only
+  through other packages are trusted to pnpm. It meets the Cyber Resilience
+  Act's wording
   ("a commonly used and machine-readable format covering at the very least
   the top-level dependencies"); it is not claimed to meet BSI TR-03183-2,
   which asks for more fields.
@@ -90,10 +97,17 @@ Each entry should include:
     (`dependency-review-action`), and cannot export its own bill of
     materials. That job is not in this change, because it would fail on
     every pull request until the graph is on.
+- **First run, on its own pull request.** Both scans passed (the product
+  in 2 min 18 s, the workflows in 58 s; 2,018 files read, none from
+  `_context` or `apps/poc`). The workflows had no finding. The product had
+  one, rated high, in a test written for this slice
+  (`replace("@", ...)` changes the first `@` only): fixed here. The bills
+  of materials took 52 s.
 - Not built: signing or attesting the files (the deployment is built by
   Vercel, so there is nothing made here to bind an attestation to); a bill
   for a deployment as traced by the host; keeping the files longer than 90
-  days.
+  days; leaving peer-only packages out of the files (pnpm 11.9 has
+  `--exclude-peers`; the repository is on 11.1).
 - Pinned: `github/codeql-action` v4.39.3. v4.39.4 was two days and 23
   hours old, under the three days Renovate waits for.
 - Read before building: GitHub's CodeQL workflow options, query suites and
